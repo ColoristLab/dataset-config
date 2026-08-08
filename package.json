@@ -23,60 +23,93 @@
     "type-parsing"
   ],
   "bugs": {
-    "url": "https://github.com/ColorlabHQ/dataset-config/issues"
+    "url": "https://github.com/ColoristLab/dataset-config/issues"
   },
   "license": "MIT",
   "author": "ajiho",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ColorlabHQ/dataset-config.git"
+    "url": "git+https://github.com/ColoristLab/dataset-config.git"
   },
   "funding": "https://www.lujiahao.com/sponsor",
   "files": [
-    "dist/"
+    "dist"
   ],
   "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "unpkg": "./dist/dataset-config.min.js",
+  "jsdelivr": "./dist/dataset-config.min.js",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
     }
   },
   "publishConfig": {
     "tag": "latest"
   },
   "scripts": {
+    "prepare": "simple-git-hooks",
     "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
     "lint": "oxlint",
-    "lint:fix": "oxlint --fix",
+    "lint:fix": "pnpm run lint --fix",
     "size": "size-limit",
     "clean": "rimraf dist",
-    "build:base": "rolldown -c",
-    "build:min": "cross-env NODE_ENV=production run-s build:base",
-    "build": "run-s clean build:* size",
-    "test": "vitest --coverage --ui",
+    "tsdown:base": "tsdown",
+    "tsdown:min": "cross-env NODE_ENV=production tsdown --filter iife",
+    "tsdown": "run-p tsdown:*",
+    "build": "run-s clean tsdown size",
+    "dev": "pnpm run tsdown:base --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest --coverage",
+    "test:ui": "pnpm run test --ui",
     "coverage": "vitest run --coverage",
-    "prepare": "simple-git-hooks"
+    "publint": "publint",
+    "commitlint": "commitlint -e -V",
+    "check": "run-s fmt:check lint typecheck coverage build publint",
+    "release": "releaseasy"
   },
   "devDependencies": {
-    "@size-limit/preset-small-lib": "^13.0.3",
-    "@vitest/coverage-v8": "^4.1.10",
-    "@vitest/ui": "^4.1.10",
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
+    "@commitlint/types": "^21.2.3",
+    "@size-limit/preset-small-lib": "^14.2.0",
+    "@types/node": "^26.6.5",
+    "@vitest/coverage-v8": "^5.0.5",
+    "@vitest/ui": "^5.0.5",
     "cross-env": "^10.1.0",
+    "jsdom": "^30.1.3",
     "npm-run-all2": "^9.0.3",
-    "oxfmt": "^0.62.0",
-    "oxlint": "^1.77.0",
+    "oxfmt": "^0.73.0",
+    "oxlint": "^1.88.0",
+    "publint": "^0.3.25",
+    "releaseasy": "^0.1.1",
     "rimraf": "^6.1.3",
-    "rolldown": "^1.2.3",
-    "simple-git-hooks": "^2.13.1",
-    "size-limit": "^13.0.3",
-    "vitest": "^4.1.10"
+    "simple-git-hooks": "^2.14.0",
+    "size-limit": "^14.2.0",
+    "tsdown": "^0.23.1",
+    "typescript": "6.0.3",
+    "vitest": "^5.0.5"
   },
   "simple-git-hooks": {
-    "pre-commit": "pnpm lint && pnpm coverage && pnpm build"
+    "commit-msg": "pnpm commitlint",
+    "pre-commit": "pnpm check"
   },
-  "packageManager": "pnpm@11.20.0+sha512.9a6f330a95b66446ea088faf1521405a8a01f07fde7124cc9958dfed52d4bb436737e65b08f85f37b46fcba375092558ac51262b816844b22f63406ed166bfee"
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.14.0",
+      "onFail": "download"
+    },
+    "runtime": {
+      "name": "node",
+      "version": "^22.19.0 || ^24.18.0 || >=26.3.0",
+      "onFail": "error"
+    }
+  },
+  "packageManager": "pnpm@12.14.0+sha512.c18ba6d87993d3d164cb5e8948f32b2c06ee854487e06cd8d86781342fb3e5bb4634367034711e86802baa9c37bea906ce1929ad08d70884c97d801df13389a6"
 }
