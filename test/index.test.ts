@@ -1,10 +1,20 @@
-import { beforeEach, afterEach, describe, expect, it } from "vitest";
-import datasetConfig from "../src/index";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
+import datasetConfig from "../src/index.ts";
+
+/**
+ * 扩展 Window 类型
+ */
+declare global {
+  interface Window {
+    init?: () => string;
+  }
+}
 
 describe("datasetConfig", () => {
-  let element;
-  let element3;
-  let element2;
+  let element: HTMLElement;
+  let element2: HTMLElement;
+  let element3: HTMLElement;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -48,13 +58,14 @@ describe("datasetConfig", () => {
 
     window.init = () => "hello";
 
-    element = document.querySelector("[data-toggle]");
-    element3 = document.querySelector("#element3");
-    element2 = document.querySelector("#element2");
+    element = document.querySelector<HTMLElement>("[data-toggle]")!;
+    element2 = document.querySelector<HTMLElement>("#element2")!;
+    element3 = document.querySelector<HTMLElement>("#element3")!;
   });
 
   afterEach(() => {
     delete window.init;
+    document.body.innerHTML = "";
   });
 
   it("默认解析", () => {
@@ -257,33 +268,41 @@ describe("datasetConfig", () => {
   it("解析 JSON Object", () => {
     element.setAttribute("data-a", '{"x":1}');
 
-    expect(datasetConfig(element).a).toEqual({
-      x: 1,
+    expect(datasetConfig(element)).toMatchObject({
+      a: { x: 1 },
     });
   });
 
   it("解析 JSON Array", () => {
     element.setAttribute("data-a", "[1,2,3]");
 
-    expect(datasetConfig(element).a).toEqual([1, 2, 3]);
+    expect(datasetConfig(element)).toMatchObject({
+      a: [1, 2, 3],
+    });
   });
 
   it("非法 JSON 返回原字符串", () => {
     element.setAttribute("data-a", "{foo}");
 
-    expect(datasetConfig(element).a).toBe("{foo}");
+    expect(datasetConfig(element)).toMatchObject({
+      a: "{foo}",
+    });
   });
 
   it("普通字符串保持不变", () => {
     element.setAttribute("data-a", "hello");
 
-    expect(datasetConfig(element).a).toBe("hello");
+    expect(datasetConfig(element)).toMatchObject({
+      a: "hello",
+    });
   });
 
   it("空字符串保持为空", () => {
     element.setAttribute("data-a", "");
 
-    expect(datasetConfig(element).a).toBe("");
+    expect(datasetConfig(element)).toMatchObject({
+      a: "",
+    });
   });
 
   it("prefix 不应错误匹配相似前缀", () => {
@@ -302,5 +321,25 @@ describe("datasetConfig", () => {
         prefix: "appLazy",
       }),
     ).toEqual({});
+  });
+
+  it("跳过值为 undefined 的 dataset 属性", () => {
+    Object.defineProperty(element, "dataset", {
+      configurable: true,
+      value: {
+        undefinedValue: undefined,
+        valid: "123",
+      } as DOMStringMap,
+    });
+
+    expect(datasetConfig(element)).toEqual({
+      valid: 123,
+    });
+  });
+
+  it("跳过末尾为空的属性路径", () => {
+    element.setAttribute("data-foo.", "hello");
+
+    expect(datasetConfig(element)).not.toHaveProperty("foo");
   });
 });
