@@ -7,3 +7,4 @@ minimumReleaseAgeExcludePrune: true
 
 minimumReleaseAgeExclude:
   - releaseasy@0.1.1
+  - headify@0.4.0
